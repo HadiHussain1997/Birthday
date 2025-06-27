@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sehru's Birthday Adventure</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -54,22 +55,9 @@
             opacity: 0.7;
         }
         
-        .cloud-1 { top: 50px; left: 100px; width: 80px; height: 40px; }
-        .cloud-2 { top: 30px; left: 400px; width: 120px; height: 50px; }
-        .cloud-3 { top: 80px; left: 650px; width: 90px; height: 45px; }
-        
-        /* Game grid for top-down view */
-        .game-grid {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: grid;
-            grid-template-columns: repeat(16, 1fr);
-            grid-template-rows: repeat(10, 1fr);
-            z-index: 2;
-        }
+        .cloud-1 { top: 50px; left: 100px; width: 80px; height: 40px; animation: float 20s infinite linear; }
+        .cloud-2 { top: 30px; left: 400px; width: 120px; height: 50px; animation: float 25s infinite linear reverse; }
+        .cloud-3 { top: 80px; left: 650px; width: 90px; height: 45px; animation: float 18s infinite linear; }
         
         /* Player character */
         .player {
@@ -177,6 +165,7 @@
             justify-content: center;
             font-size: 40px;
             color: #7b1fa2;
+            animation: glow 2s infinite alternate;
         }
         
         /* Obstacles */
@@ -307,6 +296,13 @@
             color: #ff4081;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             z-index: 10;
+            display: flex;
+            align-items: center;
+        }
+        
+        .score i {
+            margin-right: 10px;
+            color: #d81b60;
         }
         
         /* Sound Controls */
@@ -342,6 +338,11 @@
         @keyframes popIn {
             0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
             100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(251, 255, 0, 0.5); }
+            100% { box-shadow: 0 0 20px rgba(251, 255, 0, 0.8); }
         }
         
         .collected {
@@ -398,9 +399,6 @@
         <div class="cloud cloud-1"></div>
         <div class="cloud cloud-2"></div>
         <div class="cloud cloud-3"></div>
-        
-        <!-- Game grid for top-down view -->
-        <div class="game-grid"></div>
         
         <!-- Obstacles -->
         <div class="obstacle obstacle-1"></div>
@@ -474,7 +472,7 @@
         <!-- Door -->
         <div class="door" id="door">🚪</div>
         
-        <div class="score">Cupcakes: <span id="score">0</span>/5</div>
+        <div class="score"><i class="fas fa-birthday-cake"></i> Cupcakes: <span id="score">0</span>/5</div>
         
         <div class="controls">
             Use <strong>Arrow Keys</strong> to move in all directions!
@@ -496,16 +494,25 @@
         </div>
     </div>
     
+    <!-- Audio elements -->
     <audio id="background-music" loop>
-        <source src="https://audio.jukehost.co.uk/8qHl4YQb6u3Fw4x3wv7M8O0L7uZ5O3sS" type="audio/mpeg">
+        <source src="background.mp3" type="audio/mpeg">
     </audio>
     
     <audio id="collect-sound">
-        <source src="https://www.soundjay.com/buttons/sounds/button-09.mp3" type="audio/mpeg">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-game-ball-tap-2073.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="move-sound">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="message-sound">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-magic-sparkles-300.mp3" type="audio/mpeg">
     </audio>
     
     <audio id="win-sound">
-        <source src="https://www.soundjay.com/misc/sounds/magic-chime-01.mp3" type="audio/mpeg">
+        <source src="end.mp3" type="audio/mpeg">
     </audio>
 
     <script>
@@ -524,8 +531,12 @@
         const endMessage = document.getElementById('end-message');
         const soundControl = document.getElementById('soundControl');
         const scoreElement = document.getElementById('score');
+        
+        // Audio elements
         const backgroundMusic = document.getElementById('background-music');
         const collectSound = document.getElementById('collect-sound');
+        const moveSound = document.getElementById('move-sound');
+        const messageSound = document.getElementById('message-sound');
         const winSound = document.getElementById('win-sound');
         
         // Messages for each cupcake
@@ -544,27 +555,40 @@
         let gameActive = true;
         let musicPlaying = true;
         let movementSpeed = 5;
+        let lastMoveTime = 0;
+        const moveSoundDelay = 200; // ms
         
         // Initialize game
         function initGame() {
             // Position player
             updatePlayerPosition();
             
-            // Start background music
-            backgroundMusic.volume = 0.4;
-            backgroundMusic.play().catch(e => console.log("Autoplay prevented: " + e));
-            
             // Set up keyboard controls
             document.addEventListener('keydown', handleKeyDown);
             
             // Sound control
             soundControl.addEventListener('click', toggleSound);
+            
+            // Start background music
+            backgroundMusic.volume = 0.4;
+            backgroundMusic.play().catch(e => console.log("Autoplay prevented: " + e));
         }
         
         // Update player position
         function updatePlayerPosition() {
             player.style.left = playerX + 'px';
             player.style.top = playerY + 'px';
+        }
+        
+        // Play move sound with delay
+        function playMoveSound() {
+            const now = Date.now();
+            if (now - lastMoveTime > moveSoundDelay) {
+                moveSound.currentTime = 0;
+                moveSound.volume = 0.3;
+                moveSound.play();
+                lastMoveTime = now;
+            }
         }
         
         // Handle keyboard input
@@ -574,17 +598,21 @@
             switch(e.key) {
                 case 'ArrowUp':
                     playerY = Math.max(playerY - movementSpeed, 10);
+                    playMoveSound();
                     break;
                 case 'ArrowDown':
                     playerY = Math.min(playerY + movementSpeed, 450);
+                    playMoveSound();
                     break;
                 case 'ArrowLeft':
                     playerX = Math.max(playerX - movementSpeed, 10);
                     player.style.transform = 'scaleX(-1)';
+                    playMoveSound();
                     break;
                 case 'ArrowRight':
                     playerX = Math.min(playerX + movementSpeed, 750);
                     player.style.transform = 'scaleX(1)';
+                    playMoveSound();
                     break;
             }
             
@@ -631,20 +659,26 @@
             collectedCupcakes++;
             scoreElement.textContent = collectedCupcakes;
             
+            // Play collect sound
+            collectSound.currentTime = 0;
+            collectSound.volume = 0.5;
+            collectSound.play();
+            
             // Show message
             messageText.textContent = cupcakeMessages[index];
             message.style.display = 'block';
             
-            // Play sound
-            collectSound.currentTime = 0;
-            collectSound.play();
+            // Play message sound
+            messageSound.currentTime = 0;
+            messageSound.volume = 0.6;
+            messageSound.play();
             
-            // Auto-close message after 3 seconds
+            // Auto-close message after 4 seconds
             setTimeout(() => {
                 if (message.style.display === 'block') {
                     closeMessage();
                 }
-            }, 3000);
+            }, 4000);
         }
         
         // Close message
@@ -662,8 +696,13 @@
             }
             
             gameActive = false;
-            winSound.play();
             backgroundMusic.pause();
+            
+            // Play win sound
+            winSound.currentTime = 0;
+            winSound.volume = 0.7;
+            winSound.play();
+            
             endMessage.style.display = 'block';
         }
         
