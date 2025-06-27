@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sehru's Birthday Adventure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', 'Marker Felt', cursive;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #ffcce6, #ffb3d9, #ff99cc);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+        
+        .game-title {
+            font-size: 3.5rem;
+            color: #d81b60;
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 3px 3px 0 rgba(255, 215, 0, 0.8);
+            letter-spacing: 2px;
+            animation: titlePulse 2s infinite;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            background: linear-gradient(45deg, #87ceeb, #b3e0ff);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            border: 12px solid #ff69b4;
+        }
+        
+        /* Background decorations */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            opacity: 0.7;
+        }
+        
+        .cloud-1 { top: 50px; left: 100px; width: 80px; height: 40px; }
+        .cloud-2 { top: 30px; left: 400px; width: 120px; height: 50px; }
+        .cloud-3 { top: 80px; left: 650px; width: 90px; height: 45px; }
+        
+        /* Game grid for top-down view */
+        .game-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            z-index: 2;
+        }
+        
+        /* Player character */
+        .player {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #ff4081;
+            border-radius: 50%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            transition: transform 0.2s;
+        }
+        
+        .player::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 10px;
+            width: 20px;
+            height: 15px;
+        }
+        
+        .player-eye {
+            position: absolute;
+            width: 6px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+        }
+        
+        .player-eye.left { top: 12px; left: 12px; }
+        .player-eye.right { top: 12px; right: 12px; }
+        
+        .player-mouth {
+            position: absolute;
+            bottom: 10px;
+            left: 12px;
+            width: 16px;
+            height: 8px;
+            background: #d81b60;
+            border-radius: 0 0 50% 50%;
+        }
+        
+        /* Cupcakes */
+        .cupcake {
+            position: absolute;
+            width: 40px;
+            height: 50px;
+            z-index: 5;
+            animation: float 3s infinite ease-in-out;
+            transition: transform 0.5s, opacity 0.5s;
+        }
+        
+        .cupcake-base {
+            position: absolute;
+            bottom: 0;
+            width: 30px;
+            height: 20px;
+            left: 5px;
+            background: #8B4513;
+            border-radius: 0 0 8px 8px;
+        }
+        
+        .cupcake-frosting {
+            position: absolute;
+            top: 0;
+            width: 40px;
+            height: 30px;
+            background: #ff66b3;
+            border-radius: 50% 50% 30% 30%;
+        }
+        
+        .cupcake-sprinkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ff0000;
+            border-radius: 50%;
+        }
+        
+        .sprinkle1 { top: 8px; left: 10px; }
+        .sprinkle2 { top: 5px; right: 10px; }
+        .sprinkle3 { top: 15px; left: 18px; }
+        
+        .cupcake-1 { top: 100px; left: 200px; animation-delay: 0s; }
+        .cupcake-2 { top: 300px; left: 500px; animation-delay: 0.3s; }
+        .cupcake-3 { top: 150px; left: 600px; animation-delay: 0.6s; }
+        .cupcake-4 { top: 350px; left: 300px; animation-delay: 0.9s; }
+        .cupcake-5 { top: 250px; left: 100px; animation-delay: 1.2s; }
+        
+        /* Door */
+        .door {
+            position: absolute;
+            bottom: 60px;
+            right: 70px;
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(to right, #ba68c8, #e1bee7);
+            border: 4px solid #7b1fa2;
+            border-radius: 10px;
+            z-index: 5;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: #7b1fa2;
+        }
+        
+        /* Obstacles */
+        .obstacle {
+            position: absolute;
+            background: linear-gradient(45deg, #a1887f, #8d6e63);
+            border: 3px solid #6d4c41;
+            border-radius: 10px;
+            z-index: 3;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .obstacle-1 { top: 50px; left: 150px; width: 120px; height: 30px; }
+        .obstacle-2 { top: 200px; left: 400px; width: 100px; height: 30px; }
+        .obstacle-3 { top: 350px; left: 550px; width: 150px; height: 30px; }
+        .obstacle-4 { top: 100px; left: 400px; width: 30px; height: 150px; }
+        .obstacle-5 { top: 250px; left: 200px; width: 30px; height: 120px; }
+        
+        /* Trees */
+        .tree {
+            position: absolute;
+            z-index: 4;
+        }
+        
+        .tree-trunk {
+            position: absolute;
+            bottom: 0;
+            width: 20px;
+            height: 50px;
+            background: #8B4513;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 5px;
+        }
+        
+        .tree-top {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            background: #4CAF50;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 100, 0, 0.3);
+        }
+        
+        .tree-1 { top: 80px; left: 100px; }
+        .tree-2 { top: 180px; left: 700px; }
+        .tree-3 { top: 380px; left: 150px; }
+        .tree-4 { top: 280px; left: 500px; }
+        
+        /* Messages */
+        .message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px 35px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            max-width: 85%;
+            z-index: 20;
+            display: none;
+            border: 5px solid #ff4081;
+            animation: popIn 0.5s ease-out;
+        }
+        
+        .message h2 {
+            color: #ff4081;
+            margin-bottom: 15px;
+            font-size: 32px;
+        }
+        
+        .message p {
+            color: #333;
+            font-size: 22px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .message button {
+            background: linear-gradient(to bottom, #ff4081, #d81b60);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .message button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+        }
+        
+        /* Controls */
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #7e57c2;
+            font-size: 18px;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 8px;
+            border-radius: 10px;
+            margin: 0 20px;
+            width: calc(100% - 40px);
+        }
+        
+        /* Score */
+        .score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 24px;
+            color: #ff4081;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        
+        /* Sound Controls */
+        .sound-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 20;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            font-size: 24px;
+            color: #ff4081;
+        }
+        
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        
+        .collected {
+            animation: collected 0.8s forwards;
+        }
+        
+        @keyframes collected {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(3) rotate(30deg); opacity: 0; }
+        }
+        
+        /* Hearts floating in background */
+        .bg-heart {
+            position: absolute;
+            color: rgba(255, 105, 180, 0.3);
+            font-size: 24px;
+            z-index: 0;
+            animation: floatHeart 20s infinite linear;
+        }
+        
+        @keyframes floatHeart {
+            0% { transform: translateY(500px) rotate(0deg); }
+            100% { transform: translateY(-100px) rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 850px) {
+            .game-container {
+                width: 95vw;
+                height: 70vh;
+            }
+            
+            .game-title {
+                font-size: 2.5rem;
+            }
+            
+            .controls {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="game-title">Sehru's Birthday Adventure ❤️</h1>
+    
+    <div class="game-container">
+        <!-- Background hearts -->
+        <div class="bg-heart" style="left: 5%;">❤️</div>
+        <div class="bg-heart" style="left: 15%; animation-delay: -3s;">❤️</div>
+        <div class="bg-heart" style="left: 25%; animation-delay: -8s;">❤️</div>
+        <div class="bg-heart" style="left: 35%; animation-delay: -5s;">❤️</div>
+        <div class="bg-heart" style="left: 45%; animation-delay: -10s;">❤️</div>
+        
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        <div class="cloud cloud-3"></div>
+        
+        <!-- Game grid for top-down view -->
+        <div class="game-grid"></div>
+        
+        <!-- Obstacles -->
+        <div class="obstacle obstacle-1"></div>
+        <div class="obstacle obstacle-2"></div>
+        <div class="obstacle obstacle-3"></div>
+        <div class="obstacle obstacle-4"></div>
+        <div class="obstacle obstacle-5"></div>
+        
+        <!-- Trees -->
+        <div class="tree tree-1">
+            <div class="tree-trunk"></div>
+            <div class="tree-top"></div>
+        </div>
+        <div class="tree tree-2">
+            <div class="tree-trunk"></div>
+            <div class="tree-top"></div>
+        </div>
+        <div class="tree tree-3">
+            <div class="tree-trunk"></div>
+            <div class="tree-top"></div>
+        </div>
+        <div class="tree tree-4">
+            <div class="tree-trunk"></div>
+            <div class="tree-top"></div>
+        </div>
+        
+        <!-- Player -->
+        <div class="player" id="player">
+            <div class="player-eye left"></div>
+            <div class="player-eye right"></div>
+            <div class="player-mouth"></div>
+        </div>
+        
+        <!-- Cupcakes -->
+        <div class="cupcake cupcake-1" id="cupcake1">
+            <div class="cupcake-base"></div>
+            <div class="cupcake-frosting"></div>
+            <div class="cupcake-sprinkle sprinkle1"></div>
+            <div class="cupcake-sprinkle sprinkle2"></div>
+            <div class="cupcake-sprinkle sprinkle3"></div>
+        </div>
+        <div class="cupcake cupcake-2" id="cupcake2">
+            <div class="cupcake-base"></div>
+            <div class="cupcake-frosting"></div>
+            <div class="cupcake-sprinkle sprinkle1"></div>
+            <div class="cupcake-sprinkle sprinkle2"></div>
+            <div class="cupcake-sprinkle sprinkle3"></div>
+        </div>
+        <div class="cupcake cupcake-3" id="cupcake3">
+            <div class="cupcake-base"></div>
+            <div class="cupcake-frosting"></div>
+            <div class="cupcake-sprinkle sprinkle1"></div>
+            <div class="cupcake-sprinkle sprinkle2"></div>
+            <div class="cupcake-sprinkle sprinkle3"></div>
+        </div>
+        <div class="cupcake cupcake-4" id="cupcake4">
+            <div class="cupcake-base"></div>
+            <div class="cupcake-frosting"></div>
+            <div class="cupcake-sprinkle sprinkle1"></div>
+            <div class="cupcake-sprinkle sprinkle2"></div>
+            <div class="cupcake-sprinkle sprinkle3"></div>
+        </div>
+        <div class="cupcake cupcake-5" id="cupcake5">
+            <div class="cupcake-base"></div>
+            <div class="cupcake-frosting"></div>
+            <div class="cupcake-sprinkle sprinkle1"></div>
+            <div class="cupcake-sprinkle sprinkle2"></div>
+            <div class="cupcake-sprinkle sprinkle3"></div>
+        </div>
+        
+        <!-- Door -->
+        <div class="door" id="door">🚪</div>
+        
+        <div class="score">Cupcakes: <span id="score">0</span>/5</div>
+        
+        <div class="controls">
+            Use <strong>Arrow Keys</strong> to move in all directions!
+        </div>
+        
+        <div class="sound-control" id="soundControl">🔊</div>
+        
+        <div class="message" id="message">
+            <h2>Cupcake Collected!</h2>
+            <p id="message-text">You collected a cupcake! Just like you collect all my attention 😘</p>
+            <button onclick="closeMessage()">Continue</button>
+        </div>
+        
+        <div class="message" id="end-message">
+            <h2>Happy Birthday Sehru!</h2>
+            <p>Happy Birthday, my forever hmmm machine ❤️ — Dora</p>
+            <p>Life with you is amazing!</p>
+            <button onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+    
+    <audio id="background-music" loop>
+        <source src="https://audio.jukehost.co.uk/8qHl4YQb6u3Fw4x3wv7M8O0L7uZ5O3sS" type="audio/mpeg">
+    </audio>
+    
+    <audio id="collect-sound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-09.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="win-sound">
+        <source src="https://www.soundjay.com/misc/sounds/magic-chime-01.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // Game elements
+        const player = document.getElementById('player');
+        const cupcakes = [
+            document.getElementById('cupcake1'),
+            document.getElementById('cupcake2'),
+            document.getElementById('cupcake3'),
+            document.getElementById('cupcake4'),
+            document.getElementById('cupcake5')
+        ];
+        const door = document.getElementById('door');
+        const message = document.getElementById('message');
+        const messageText = document.getElementById('message-text');
+        const endMessage = document.getElementById('end-message');
+        const soundControl = document.getElementById('soundControl');
+        const scoreElement = document.getElementById('score');
+        const backgroundMusic = document.getElementById('background-music');
+        const collectSound = document.getElementById('collect-sound');
+        const winSound = document.getElementById('win-sound');
+        
+        // Messages for each cupcake
+        const cupcakeMessages = [
+            "You collected a cupcake! Just like you collect all my attention 😘",
+            "'Hmmm' detected... Translating: I love you too!",
+            "Not all heroes wear capes. Some reply with 'hmmm' 😏",
+            "If this level had a boss fight, you'd win with just one smile 😍",
+            "You've reached the love checkpoint! Save your heart progress ❤️"
+        ];
+        
+        // Game state
+        let collectedCupcakes = 0;
+        let playerX = 50;
+        let playerY = 250;
+        let gameActive = true;
+        let musicPlaying = true;
+        let movementSpeed = 5;
+        
+        // Initialize game
+        function initGame() {
+            // Position player
+            updatePlayerPosition();
+            
+            // Start background music
+            backgroundMusic.volume = 0.4;
+            backgroundMusic.play().catch(e => console.log("Autoplay prevented: " + e));
+            
+            // Set up keyboard controls
+            document.addEventListener('keydown', handleKeyDown);
+            
+            // Sound control
+            soundControl.addEventListener('click', toggleSound);
+        }
+        
+        // Update player position
+        function updatePlayerPosition() {
+            player.style.left = playerX + 'px';
+            player.style.top = playerY + 'px';
+        }
+        
+        // Handle keyboard input
+        function handleKeyDown(e) {
+            if (!gameActive) return;
+            
+            switch(e.key) {
+                case 'ArrowUp':
+                    playerY = Math.max(playerY - movementSpeed, 10);
+                    break;
+                case 'ArrowDown':
+                    playerY = Math.min(playerY + movementSpeed, 450);
+                    break;
+                case 'ArrowLeft':
+                    playerX = Math.max(playerX - movementSpeed, 10);
+                    player.style.transform = 'scaleX(-1)';
+                    break;
+                case 'ArrowRight':
+                    playerX = Math.min(playerX + movementSpeed, 750);
+                    player.style.transform = 'scaleX(1)';
+                    break;
+            }
+            
+            updatePlayerPosition();
+            checkCollisions();
+        }
+        
+        // Check for collisions
+        function checkCollisions() {
+            // Cupcake collisions
+            cupcakes.forEach((cupcake, index) => {
+                if (cupcake.classList.contains('collected')) return;
+                
+                const cupcakeRect = cupcake.getBoundingClientRect();
+                const playerRect = player.getBoundingClientRect();
+                
+                if (
+                    playerRect.right > cupcakeRect.left &&
+                    playerRect.left < cupcakeRect.right &&
+                    playerRect.bottom > cupcakeRect.top &&
+                    playerRect.top < cupcakeRect.bottom
+                ) {
+                    collectCupcake(cupcake, index);
+                }
+            });
+            
+            // Door collision
+            const doorRect = door.getBoundingClientRect();
+            const playerRect = player.getBoundingClientRect();
+            
+            if (
+                playerRect.right > doorRect.left &&
+                playerRect.left < doorRect.right &&
+                playerRect.bottom > doorRect.top &&
+                playerRect.top < doorRect.bottom
+            ) {
+                endGame();
+            }
+        }
+        
+        // Collect cupcake
+        function collectCupcake(cupcake, index) {
+            cupcake.classList.add('collected');
+            collectedCupcakes++;
+            scoreElement.textContent = collectedCupcakes;
+            
+            // Show message
+            messageText.textContent = cupcakeMessages[index];
+            message.style.display = 'block';
+            
+            // Play sound
+            collectSound.currentTime = 0;
+            collectSound.play();
+            
+            // Auto-close message after 3 seconds
+            setTimeout(() => {
+                if (message.style.display === 'block') {
+                    closeMessage();
+                }
+            }, 3000);
+        }
+        
+        // Close message
+        function closeMessage() {
+            message.style.display = 'none';
+        }
+        
+        // End game
+        function endGame() {
+            if (collectedCupcakes < 5) {
+                messageText.textContent = "Collect all cupcakes before reaching the door!";
+                message.style.display = 'block';
+                setTimeout(closeMessage, 2000);
+                return;
+            }
+            
+            gameActive = false;
+            winSound.play();
+            backgroundMusic.pause();
+            endMessage.style.display = 'block';
+        }
+        
+        // Restart game
+        function restartGame() {
+            collectedCupcakes = 0;
+            playerX = 50;
+            playerY = 250;
+            gameActive = true;
+            scoreElement.textContent = "0";
+            
+            // Reset cupcakes
+            cupcakes.forEach(cupcake => {
+                cupcake.classList.remove('collected');
+                cupcake.style.opacity = '1';
+                cupcake.style.transform = 'scale(1)';
+            });
+            
+            // Hide messages
+            endMessage.style.display = 'none';
+            message.style.display = 'none';
+            
+            // Update player position
+            updatePlayerPosition();
+            
+            // Restart music
+            if (musicPlaying) {
+                backgroundMusic.currentTime = 0;
+                backgroundMusic.play();
+            }
+        }
+        
+        // Toggle sound
+        function toggleSound() {
+            musicPlaying = !musicPlaying;
+            
+            if (musicPlaying) {
+                backgroundMusic.play();
+                soundControl.textContent = '🔊';
+            } else {
+                backgroundMusic.pause();
+                soundControl.textContent = '🔇';
+            }
+        }
+        
+        // Start the game
+        window.onload = initGame;
+    </script>
+</body>
+</html>
