@@ -8,14 +8,12 @@ kaboom({
 loadSprite("sehru", "assets/sprites/sehru.png");
 loadSprite("cupcake", "assets/sprites/cupcake.png");
 loadSprite("door", "assets/sprites/door.png");
-
 loadSound("ending", "sounds/ending.mp3");
 
 scene("game", () => {
+    setGravity(800);
     const SPEED = 120;
     const JUMP_FORCE = 360;
-
-    setGravity(800);
 
     const player = add([
         sprite("sehru"),
@@ -53,26 +51,22 @@ scene("game", () => {
         if (player.isGrounded()) player.jump(JUMP_FORCE);
     });
 
-addLevel([
-  "===========================",
-  "=                         =",
-  "=                         =",
-  "=                         =",
-  "=                         =",
-  "=                         =",
-  "=                         =",
-  "=                         =",
-  "=                         =",
-  "===========================",
-], {
-  tileWidth: 32,
-  tileHeight: 32,
-  "=": () => [
-    rect(32, 32),
-    area(),
-    solid(),
-    color(255, 150, 200),
-  ],
+    addLevel([
+        "===========================",
+        "=                         =",
+        "=                         =",
+        "=                         =",
+        "=                         =",
+        "=                         =",
+        "=                         =",
+        "=                         =",
+        "=                         =",
+        "===========================",
+    ], {
+        tileWidth: 32,
+        tileHeight: 32,
+        "=": () => [rect(32, 32), area(), solid(), color(255, 150, 200)],
+    });
 });
 
 scene("ending", () => {
